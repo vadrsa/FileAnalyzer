@@ -6,6 +6,8 @@ namespace FileAnalyzer.Core
 {
 	public interface IOccurance
 	{
-
+		FileMetadata File { get; }
+		string Pointer { get; }
+		string Word { get; }
 	}
 }

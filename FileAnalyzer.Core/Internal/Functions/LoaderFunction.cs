@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace FileAnalyzer.Core.Internal
 {
 
-	public class LoaderFunction : IDisposable, IFunction<string, IConnectableObservable<FileMetadata>>
+	internal class LoaderFunction : AbstractFunction<string, IConnectableObservable<FileMetadata>>, IDisposable
 	{
 		private ConcurrentBinaryMinHeap<FileMetadata> _minHeap;
 		private HeapObservable<FileMetadata> _observable;
@@ -23,9 +23,9 @@ namespace FileAnalyzer.Core.Internal
 			_cancellationTokenSource = new CancellationTokenSource();
 		}
 
-		public IConnectableObservable<FileMetadata> Execute(string path)
+		public override IConnectableObservable<FileMetadata> Execute(string path)
 		{
-			Task.Run(() => LoadFiles(new DirectoryInfo(path), _cancellationTokenSource.Token)).ConfigureAwait(false);
+			Task.Run(() => LoadFiles(new DirectoryInfo(path), _cancellationTokenSource.Token));
 			return _observable;
 		}
 
@@ -60,7 +60,7 @@ namespace FileAnalyzer.Core.Internal
 				Parallel.ForEach(dir.GetFiles(), (file, state, j) =>
 				{
 					cancellation.ThrowIfCancellationRequested();
-					var metadata = new FileMetadata() { FullPath = file.FullName, FileSizeInBytes = file.Length };
+					var metadata = new FileMetadata() { Id = Guid.NewGuid().ToString(), FullPath = file.FullName, FileSizeInBytes = file.Length };
 					_minHeap.Push(new PriorityValuePair<FileMetadata>(file.Length, metadata));
 				});
 			}

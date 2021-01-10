@@ -31,7 +31,8 @@ namespace FileAnalyzer.ConsoleApp
 				.ConfigureServices((hostContext, services) =>
 				{
 					ConfigureServices(services, hostContext.Configuration);
-					services.AddHostedService<FileAnalyzerHosting>();
+                    services.AddHostedService<FileAnalyzerHosting>();
+                    //services.AddHostedService<BugTests>();
 				});
 
 		private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)

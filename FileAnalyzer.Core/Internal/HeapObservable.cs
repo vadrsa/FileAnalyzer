@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FileAnalyzer.Core.Internal
 {
-	public class HeapObservable<T> : IConnectableObservable<T>, IDisposable
+	internal class HeapObservable<T> : IConnectableObservable<T>, IDisposable
 	{
 		private readonly Subject<T> _subject;
 		private readonly ConcurrentBinaryMinHeap<T> _heap;
@@ -40,7 +40,6 @@ namespace FileAnalyzer.Core.Internal
 					{
 						_subject.OnCompleted();
 
-						_subject.Dispose();
 						break;
 					}
 				}
@@ -64,6 +63,7 @@ namespace FileAnalyzer.Core.Internal
 		public void Dispose()
 		{
 			_cancellationToken.Cancel();
+			_subject?.Dispose();
 		}
 	}
 }

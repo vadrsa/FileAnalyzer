@@ -3,9 +3,9 @@ using System.Reactive.Subjects;
 
 namespace FileAnalyzer.Core.Internal
 {
-	public class ConnectObservableFunction<T> : IFunction<IConnectableObservable<T>, IObservable<T>>
+	internal class ConnectObservableFunction<T> : AbstractFunction<IConnectableObservable<T>, IObservable<T>>
 	{
-		public IObservable<T> Execute(IConnectableObservable<T> obs)
+		public override IObservable<T> Execute(IConnectableObservable<T> obs)
 		{
 			obs.Connect();
 			return obs;

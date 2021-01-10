@@ -5,6 +5,6 @@ namespace FileAnalyzer.Core
 {
 	public interface IFinder
 	{
-		IConnectableObservable<IOccurance> Find(string expression, FileMetadata file, FileStream stream);
+		IConnectableObservable<IOccurance> Find(Expression expression, FileMetadata file);
 	}
 }

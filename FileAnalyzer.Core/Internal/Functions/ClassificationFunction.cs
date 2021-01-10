@@ -7,7 +7,7 @@ using System.Reactive.Subjects;
 
 namespace FileAnalyzer.Core.Internal
 {
-	public class ClassificationFunction : IFunction<IConnectableObservable<FileMetadata>, IReadOnlyDictionary<string, IObservable<FileMetadata>>>
+	internal class ClassificationFunction : AbstractFunction<IConnectableObservable<FileMetadata>, (IReadOnlyDictionary<string, IObservable<FileMetadata>> Classified, Func<IDisposable> ConnectFunc)>
 	{
 		public ClassificationFunction(IReadOnlyDictionary<string, IFinder> finders)
 		{
@@ -16,7 +16,7 @@ namespace FileAnalyzer.Core.Internal
 
 		public IReadOnlyDictionary<string, IFinder> Finders { get; }
 
-		public IReadOnlyDictionary<string, IObservable<FileMetadata>> Execute(IConnectableObservable<FileMetadata> observable) =>
-			Finders.Keys.ToDictionary(x => x, e => observable.Where(f => Path.GetExtension(f.FullPath) == e));
+		public override (IReadOnlyDictionary<string, IObservable<FileMetadata>> Classified, Func<IDisposable> ConnectFunc) Execute(IConnectableObservable<FileMetadata> observable) =>
+			(Finders.Keys.ToDictionary(x => x, e => observable.Where(f => Path.GetExtension(f.FullPath).Equals(e, StringComparison.OrdinalIgnoreCase))), observable.Connect);
 	}
 }
