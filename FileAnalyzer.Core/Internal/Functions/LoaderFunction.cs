@@ -1,7 +1,7 @@
-﻿using FileAnalyzer.Core.Internal;
-using FileAnalyzer.DataStructures;
+﻿using FileAnalyzer.DataStructures;
 using System;
-using System.IO;
+using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,43 +9,45 @@ using System.Threading.Tasks;
 namespace FileAnalyzer.Core.Internal
 {
 
-	internal class LoaderFunction : AbstractFunction<string, IConnectableObservable<FileMetadata>>, IDisposable
+    internal class LoaderFunction : AbstractFunction<string, IConnectableObservable<IFile>>, IDisposable
 	{
-		private ConcurrentBinaryMinHeap<FileMetadata> _minHeap;
-		private HeapObservable<FileMetadata> _observable;
+		private ConcurrentBinaryMinHeap<IFile> _minHeap;
+		private HeapObservable<IFile> _observable;
 		private CancellationTokenSource _cancellationTokenSource;
+        private readonly IFileSystem _fileSystem;
 
-
-		public LoaderFunction()
+        public LoaderFunction()
 		{
-			_minHeap = new ConcurrentBinaryMinHeap<FileMetadata>();
+			_minHeap = new ConcurrentBinaryMinHeap<IFile>();
 			_observable = _minHeap.ToHeapObservable();
 			_cancellationTokenSource = new CancellationTokenSource();
+			_fileSystem = new FileSystem();
 		}
 
-		public override IConnectableObservable<FileMetadata> Execute(string path)
+		public override IConnectableObservable<IFile> Execute(string path)
 		{
-			Task.Run(() => LoadFiles(new DirectoryInfo(path), _cancellationTokenSource.Token));
+			_fileSystem.Directory.SetCurrentDirectory(path);
+			Task.Run(() => LoadFiles(_fileSystem.DirectoryInfo.FromDirectoryName(path), _cancellationTokenSource.Token));
 			return _observable;
 		}
 
-		private async Task LoadFiles(DirectoryInfo root, CancellationToken cancellation = default)
+		private async Task LoadFiles(IDirectoryInfo dir, CancellationToken cancellation = default)
 		{
 			try
 			{
-				LoadRecursive(root, cancellation);
+				LoadRecursive(dir, cancellation);
 			}
 			catch (Exception) { }
 			_observable.Complete();
 		}
 
-		private void LoadRecursive(DirectoryInfo dir, CancellationToken cancellation = default)
+		private void LoadRecursive(IDirectoryInfo dir, CancellationToken cancellation = default)
 		{
-			LoadDirectoryFiles(dir, cancellation);
-
 			try
 			{
-				Parallel.ForEach(dir.GetDirectories(), (subDir, state, i) =>
+				LoadDirectoryFiles(dir.EnumerateFiles(), cancellation);
+
+				Parallel.ForEach(dir.EnumerateDirectories(), (subDir, state, i) =>
 				{
 					LoadRecursive(subDir, cancellation);
 				});
@@ -53,15 +55,15 @@ namespace FileAnalyzer.Core.Internal
 			catch (UnauthorizedAccessException) { }
 		}
 
-		private void LoadDirectoryFiles(DirectoryInfo dir, CancellationToken cancellation = default)
+		private void LoadDirectoryFiles(IEnumerable<IFileInfo> files, CancellationToken cancellation = default)
 		{
 			try
 			{
-				Parallel.ForEach(dir.GetFiles(), (file, state, j) =>
+				Parallel.ForEach(files, (f, state, j) =>
 				{
 					cancellation.ThrowIfCancellationRequested();
-					var metadata = new FileMetadata() { Id = Guid.NewGuid().ToString(), FullPath = file.FullName, FileSizeInBytes = file.Length };
-					_minHeap.Push(new PriorityValuePair<FileMetadata>(file.Length, metadata));
+					var file = new File(f);
+					_minHeap.Push(new PriorityValuePair<IFile>(file.FileSizeInBytes, file));
 				});
 			}
 			catch (OperationCanceledException) { }

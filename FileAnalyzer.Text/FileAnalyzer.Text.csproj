@@ -5,12 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Abstractions" Version="13.2.8" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FileAnalyzer.DataStructures\FileAnalyzer.DataStructures.csproj" />
+    <ProjectReference Include="..\FileAnalyzer.Core\FileAnalyzer.Core.csproj" />
   </ItemGroup>
 
 </Project>

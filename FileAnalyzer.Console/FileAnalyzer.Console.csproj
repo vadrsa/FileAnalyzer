@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FileAnalyzer.Core\FileAnalyzer.Core.csproj" />
     <ProjectReference Include="..\FileAnalyzer.DataStructures\FileAnalyzer.DataStructures.csproj" />
+    <ProjectReference Include="..\FileAnalyzer.Text\FileAnalyzer.Text.csproj" />
   </ItemGroup>
 
 </Project>

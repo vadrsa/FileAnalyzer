@@ -16,18 +16,17 @@ namespace FileAnalyzer.ConsoleApp
 {
 	public class FileAnalyzerHosting : IHostedService
 	{
-		private IReadOnlyDictionary<string, IFinder> _finders;
 		public async Task StartAsync(CancellationToken cancellationToken)
 		{
-			_finders = new Dictionary<string, IFinder>() {
-				[".txt"] = new TxtFinder(),
-				[".cs"] = new TxtFinder(),
-			}; 
 			Console.WriteLine("Enter root directory path");
 			var path = @"C:\Users\davit.asryan\Documents";
 
-			var analyzer = new Analyzer();
-			var obs = analyzer.Find(path, new Expression("testtt David"), _finders);
+			var analyzer = new AnalyzerBuilder()
+								.Text(".txt")
+								.Text(".cs")
+								.Build();
+
+			var obs = analyzer.Find(path, new Expression("testtt David"));
 
 			obs.Subscribe(occ => {
 				Console.WriteLine($"Found occurance of word {occ.Word} in {occ.File.FullPath}({occ.File.Id}) at {occ.Pointer}");
